@@ -960,6 +960,7 @@ public class Application extends Controller {
           .idEq(appId)
           .findUnique();
       if (result != null) {
+        logger.info("AppResult :" + result.toString());
         return ok(Json.toJson(result));
       } else {
         return notFound("Unable to find record on id: " + appId);

@@ -164,4 +164,34 @@ public class AppResult extends Model {
   public List<AppHeuristicResult> yarnAppHeuristicResults;
 
   public static Finder<String, AppResult> find = new Finder<String, AppResult>(String.class, AppResult.class);
+
+  @Override
+  public String toString() {
+    return "AppResult{" +
+            "id='" + id + '\'' +
+            ", name='" + name + '\'' +
+            ", username='" + username + '\'' +
+            ", queueName='" + queueName + '\'' +
+            ", startTime=" + startTime +
+            ", finishTime=" + finishTime +
+            ", trackingUrl='" + trackingUrl + '\'' +
+            ", jobType='" + jobType + '\'' +
+            ", severity=" + severity +
+            ", score=" + score +
+            ", workflowDepth=" + workflowDepth +
+            ", scheduler='" + scheduler + '\'' +
+            ", jobName='" + jobName + '\'' +
+            ", jobExecId='" + jobExecId + '\'' +
+            ", flowExecId='" + flowExecId + '\'' +
+            ", jobDefId='" + jobDefId + '\'' +
+            ", flowDefId='" + flowDefId + '\'' +
+            ", jobExecUrl='" + jobExecUrl + '\'' +
+            ", flowExecUrl='" + flowExecUrl + '\'' +
+            ", jobDefUrl='" + jobDefUrl + '\'' +
+            ", flowDefUrl='" + flowDefUrl + '\'' +
+            ", resourceUsed=" + resourceUsed +
+            ", resourceWasted=" + resourceWasted +
+            ", totalDelay=" + totalDelay +
+            '}';
+  }
 }
