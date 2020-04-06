@@ -35,9 +35,13 @@ class FSFetcher(fetcherConfigurationData: FetcherConfigurationData)
 
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     val legacyData = legacyFetcher.fetchData(analyticJob)
+
+    // 记录日志调试任务配置信息
     val executor_instance = legacyData.getEnvironmentData.getSparkProperties.get(SparkMetricsAggregator.SPARK_EXECUTOR_INSTANCES_KEY)
     val executor_memory = legacyData.getEnvironmentData.getSparkProperties.get(SparkMetricsAggregator.SPARK_EXECUTOR_MEMORY_KEY)
-    logger.info(s"SparkApplicationData ${analyticJob.getAppId} spark.executor.instances=>$executor_instance, spark.executor.memory=>$executor_memory")
+    val dynamicAllocation_enabled = legacyData.getEnvironmentData.getSparkProperties.get("spark.dynamicAllocation.enabled")
+    logger.info(s"Spark Application ${analyticJob.getAppId} spark.dynamicAllocation.enabled=>$dynamicAllocation_enabled,spark.executor.instances=>$executor_instance, spark.executor.memory=>$executor_memory")
+
     LegacyDataConverters.convert(legacyData)
   }
 }
