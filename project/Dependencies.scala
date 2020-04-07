@@ -23,7 +23,7 @@ object Dependencies {
   lazy val commonsCodecVersion = "1.10"
   lazy val commonsIoVersion = "2.4"
   lazy val gsonVersion = "2.2.4"
-  lazy val guavaVersion = "18.0"          // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
+  lazy val guavaVersion = "18.0" // Hadoop defaultly are using guava 11.0, might raise NoSuchMethodException
   lazy val jacksonMapperAslVersion = "1.7.3"
   lazy val jacksonVersion = "2.5.3"
   lazy val jerseyVersion = "2.24"
@@ -50,13 +50,13 @@ object Dependencies {
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-      )
+    )
   } else {
     "org.apache.spark" % "spark-core_2.10" % sparkVersion excludeAll(
       ExclusionRule(organization = "org.apache.avro"),
       ExclusionRule(organization = "org.apache.hadoop"),
       ExclusionRule(organization = "net.razorvine")
-      )
+    )
   }
 
   // Dependency coordinates
@@ -76,7 +76,7 @@ object Dependencies {
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % "compileonly",
     "org.apache.hadoop" % "hadoop-hdfs" % hadoopVersion % Test,
     "org.jsoup" % "jsoup" % jsoupVersion,
-    "org.apache.oozie" % "oozie-client" % oozieClientVersion excludeAll(
+    "org.apache.oozie" % "oozie-client" % oozieClientVersion excludeAll (
       ExclusionRule(organization = "org.apache.hadoop")
       ),
     "org.glassfish.jersey.core" % "jersey-client" % jerseyVersion,
@@ -88,7 +88,7 @@ object Dependencies {
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
     "io.dropwizard.metrics" % "metrics-core" % "3.1.2",
     "io.dropwizard.metrics" % "metrics-healthchecks" % "3.1.2",
-    "org.mockito" % "mockito-core" % "1.10.19" exclude ("org.hamcrest", "hamcrest-core"),
+    "org.mockito" % "mockito-core" % "1.10.19" exclude("org.hamcrest", "hamcrest-core"),
     "org.jmockit" % "jmockit" % "1.23" % Test,
     "org.scala-lang.modules" %% "scala-async" % "0.9.5",
     "org.apache.httpcomponents" % "httpclient" % "4.5.2",

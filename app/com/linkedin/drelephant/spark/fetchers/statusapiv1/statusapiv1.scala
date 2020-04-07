@@ -87,6 +87,7 @@ trait ExecutorSummary{
   def totalShuffleRead: Long
   def totalShuffleWrite: Long
   def maxMemory: Long
+  def totalGCTime: Long
   def executorLogs: Map[String, String]}
 
 trait JobData{
