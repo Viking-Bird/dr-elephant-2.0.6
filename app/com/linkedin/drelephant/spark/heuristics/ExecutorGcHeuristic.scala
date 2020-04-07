@@ -16,10 +16,11 @@
 
 package com.linkedin.drelephant.spark.heuristics
 
-import com.linkedin.drelephant.analysis.{Heuristic, HeuristicResult, HeuristicResultDetails, Severity, SeverityThresholds}
+import com.linkedin.drelephant.analysis._
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.ExecutorSummary
+import org.apache.log4j.Logger
 
 import scala.collection.JavaConverters
 
@@ -34,6 +35,8 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
   import ExecutorGcHeuristic._
 
   import JavaConverters._
+
+  val logger: Logger = Logger.getLogger(classOf[ExecutorGcHeuristic])
 
   val gcSeverityAThresholds: SeverityThresholds =
     SeverityThresholds.parse(heuristicConfigurationData.getParamMap.get(GC_SEVERITY_A_THRESHOLDS_KEY), ascending = true)
@@ -52,6 +55,8 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
       new HeuristicResultDetails("Total GC time", evaluator.jvmTime.toString),
       new HeuristicResultDetails("Total Executor Runtime", evaluator.executorRunTimeTotal.toString)
     )
+
+    logger.info(s"Spark ${data.getAppId} jvmTime: ${evaluator.jvmTime}, executorRunTimeTotal: ${evaluator.executorRunTimeTotal}")
 
     //adding recommendations to the result, severityTimeA corresponds to the ascending severity calculation
     if (evaluator.severityTimeA.getValue > Severity.LOW.getValue) {
@@ -104,6 +109,7 @@ object ExecutorGcHeuristic {
 
     /**
       * returns the total JVM GC Time and total executor Run Time across all stages
+      *
       * @param executorSummaries
       * @return
       */
@@ -111,11 +117,12 @@ object ExecutorGcHeuristic {
       var jvmGcTimeTotal: Long = 0
       var executorRunTimeTotal: Long = 0
       executorSummaries.foreach(executorSummary => {
-        jvmGcTimeTotal+=executorSummary.totalGCTime
-        executorRunTimeTotal+=executorSummary.totalDuration
+        jvmGcTimeTotal += executorSummary.totalGCTime
+        executorRunTimeTotal += executorSummary.totalDuration
       })
       (jvmGcTimeTotal, executorRunTimeTotal)
     }
   }
+
 }
 
