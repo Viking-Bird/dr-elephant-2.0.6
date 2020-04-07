@@ -125,11 +125,9 @@ object ConfigurationHeuristic {
       Try(getProperty(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)).getOrElse(None)
 
     lazy val executorInstances: Option[Int] = {
-      val spark_dynamicAllocation_enabled = getProperty(SPARK_DYNAMIC_ALLOCATION_ENABLED).map(_.toBoolean).get
-      if (spark_dynamicAllocation_enabled) {
-        Some(data.executorSummaries.size)
-      } else {
-        Try(getProperty(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)).getOrElse(None)
+      isDynamicAllocationEnabled match {
+        case Some(true) => Some(data.executorSummaries.size)
+        case Some(false) => Try(getProperty(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)).getOrElse(None)
       }
     }
 
