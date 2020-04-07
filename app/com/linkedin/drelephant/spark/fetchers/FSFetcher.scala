@@ -40,7 +40,7 @@ class FSFetcher(fetcherConfigurationData: FetcherConfigurationData)
     val executor_instance = legacyData.getEnvironmentData.getSparkProperties.get(SparkMetricsAggregator.SPARK_EXECUTOR_INSTANCES_KEY)
     val executor_memory = legacyData.getEnvironmentData.getSparkProperties.get(SparkMetricsAggregator.SPARK_EXECUTOR_MEMORY_KEY)
     val dynamicAllocation_enabled = legacyData.getEnvironmentData.getSparkProperties.get("spark.dynamicAllocation.enabled")
-    logger.info(s"Spark Application ${analyticJob.getAppId} spark.dynamicAllocation.enabled=>$dynamicAllocation_enabled,spark.executor.instances=>$executor_instance, spark.executor.memory=>$executor_memory")
+    logger.info(s"Spark Application ${analyticJob.getAppId} spark.dynamicAllocation.enabled=>$dynamicAllocation_enabled, spark.executor.instances=>$executor_instance, spark.executor.memory=>$executor_memory")
 
     LegacyDataConverters.convert(legacyData)
   }

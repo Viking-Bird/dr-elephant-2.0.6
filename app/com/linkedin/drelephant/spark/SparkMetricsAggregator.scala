@@ -27,7 +27,8 @@ import scala.util.Try
 
 
 class SparkMetricsAggregator(private val aggregatorConfigurationData: AggregatorConfigurationData)
-    extends HadoopMetricsAggregator {
+  extends HadoopMetricsAggregator {
+
   import SparkMetricsAggregator._
 
   private val logger: Logger = Logger.getLogger(classOf[SparkMetricsAggregator])
@@ -51,9 +52,9 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     executorMemoryBytes <- executorMemoryBytesOf(data)
   } {
     val applicationDurationMillis = applicationDurationMillisOf(data)
-    if( applicationDurationMillis < 0) {
+    if (applicationDurationMillis < 0) {
       logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
-    }  else {
+    } else {
       val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
 
       val resourcesAllocatedForUse =
@@ -67,6 +68,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
       }
       //allocated is the total used resource from the cluster.
       if (resourcesAllocatedForUse.isValidLong) {
+        logger.info("Spark" + data.getAppId() + s" ResourceUsed:$resourcesAllocatedForUse, executorInstances:$executorInstances, executorMemoryBytes:$executorMemoryBytes, applicationDurationMillis:$applicationDurationMillis")
         hadoopAggregatedData.setResourceUsed(resourcesAllocatedForUse.toLong)
       } else {
         logger.warn(s"resourcesAllocatedForUse/resourcesWasted exceeds Long.MaxValue")
@@ -89,10 +91,10 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
   }
 
   private def aggregateresourcesAllocatedForUse(
-    executorInstances: Int,
-    executorMemoryBytes: Long,
-    applicationDurationMillis: Long
-  ): BigInt = {
+                                                 executorInstances: Int,
+                                                 executorMemoryBytes: Long,
+                                                 applicationDurationMillis: Long
+                                               ): BigInt = {
     val bytesMillis = BigInt(executorInstances) * BigInt(executorMemoryBytes) * BigInt(applicationDurationMillis)
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
