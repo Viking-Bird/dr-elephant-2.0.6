@@ -101,7 +101,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
 
   private def executorInstancesOf(data: SparkApplicationData): Option[Int] = {
     val appConfigurationProperties = data.appConfigurationProperties
-    val spark_dynamicAllocation_enabled = appConfigurationProperties.get(SPARK_DYNAMICALLOCATION_ENABLED).map(_.toBoolean).get
+    val spark_dynamicAllocation_enabled = appConfigurationProperties.get(SPARK_DYNAMIC_ALLOCATION_ENABLED).map(_.toBoolean).get
     if (spark_dynamicAllocation_enabled) {
       Some(data.executorSummaries.size)
     } else {
@@ -133,5 +133,5 @@ object SparkMetricsAggregator {
 
   val SPARK_EXECUTOR_INSTANCES_KEY = "spark.executor.instances"
   val SPARK_EXECUTOR_MEMORY_KEY = "spark.executor.memory"
-  val SPARK_DYNAMICALLOCATION_ENABLED = "spark.dynamicAllocation.enabled"
+  val SPARK_DYNAMIC_ALLOCATION_ENABLED = "spark.dynamicAllocation.enabled"
 }
