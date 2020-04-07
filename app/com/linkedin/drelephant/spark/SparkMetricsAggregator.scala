@@ -68,7 +68,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
       }
       //allocated is the total used resource from the cluster.
       if (resourcesAllocatedForUse.isValidLong) {
-        logger.info("Spark" + data.getAppId() + s" ResourceUsed:$resourcesAllocatedForUse, executorInstances:$executorInstances, executorMemoryBytes:$executorMemoryBytes, applicationDurationMillis:$applicationDurationMillis")
+        logger.info("Spark " + data.getAppId() + s" ResourceUsed:$resourcesAllocatedForUse, executorInstances:$executorInstances, executorMemoryBytes:$executorMemoryBytes, applicationDurationMillis:$applicationDurationMillis")
         hadoopAggregatedData.setResourceUsed(resourcesAllocatedForUse.toLong)
       } else {
         logger.warn(s"resourcesAllocatedForUse/resourcesWasted exceeds Long.MaxValue")

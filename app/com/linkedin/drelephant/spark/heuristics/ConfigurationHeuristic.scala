@@ -22,9 +22,9 @@ import com.linkedin.drelephant.math.Statistics
 
 import scala.collection.JavaConverters
 import scala.util.Try
-
-import com.linkedin.drelephant.analysis.{HeuristicResultDetails, Heuristic, HeuristicResult, Severity}
+import com.linkedin.drelephant.analysis.{Heuristic, HeuristicResult, HeuristicResultDetails, Severity}
 import com.linkedin.drelephant.configurations.heuristic.HeuristicConfigurationData
+import com.linkedin.drelephant.spark.SparkMetricsAggregator.{SPARK_DYNAMICALLOCATION_ENABLED, SPARK_EXECUTOR_INSTANCES_KEY}
 import com.linkedin.drelephant.spark.data.SparkApplicationData
 import com.linkedin.drelephant.util.MemoryFormatUtils
 
@@ -36,7 +36,8 @@ import com.linkedin.drelephant.util.MemoryFormatUtils
   * driver memory, executor cores, executor instances, executor memory, and the serializer.
   */
 class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicConfigurationData)
-    extends Heuristic[SparkApplicationData] {
+  extends Heuristic[SparkApplicationData] {
+
   import ConfigurationHeuristic._
   import JavaConverters._
 
@@ -93,7 +94,7 @@ class ConfigurationHeuristic(private val heuristicConfigurationData: HeuristicCo
     }
     if (evaluator.shuffleAndDynamicAllocationSeverity != Severity.NONE) {
       result.addResultDetail(SPARK_SHUFFLE_SERVICE_ENABLED, formatProperty(evaluator.isShuffleServiceEnabled.map(_.toString)),
-      "Spark shuffle service is not enabled.")
+        "Spark shuffle service is not enabled.")
     }
     result
   }
@@ -124,13 +125,19 @@ object ConfigurationHeuristic {
     lazy val executorMemoryBytes: Option[Long] =
       Try(getProperty(SPARK_EXECUTOR_MEMORY_KEY).map(MemoryFormatUtils.stringToBytes)).getOrElse(None)
 
-    lazy val executorInstances: Option[Int] =
-      Try(getProperty(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)).getOrElse(None)
+    lazy val executorInstances: Option[Int] = {
+      val spark_dynamicAllocation_enabled = getProperty(SPARK_DYNAMICALLOCATION_ENABLED).map(_.toBoolean).get
+      if (spark_dynamicAllocation_enabled) {
+        Some(data.executorSummaries.size)
+      } else {
+        Try(getProperty(SPARK_EXECUTOR_INSTANCES_KEY).map(_.toInt)).getOrElse(None)
+      }
+    }
 
     lazy val executorCores: Option[Int] =
       Try(getProperty(SPARK_EXECUTOR_CORES_KEY).map(_.toInt)).getOrElse(None)
 
-    lazy val applicationDuration : Long = {
+    lazy val applicationDuration: Long = {
       require(data.applicationInfo.attempts.nonEmpty)
       val lastApplicationAttemptInfo = data.applicationInfo.attempts.last
       (lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime) / Statistics.SECOND_IN_MS
@@ -139,8 +146,8 @@ object ConfigurationHeuristic {
     lazy val serializer: Option[String] = getProperty(SPARK_SERIALIZER_KEY)
 
     /**
-     * If the serializer is either not configured or not equal to KryoSerializer, then the severity will be moderate.
-     */
+      * If the serializer is either not configured or not equal to KryoSerializer, then the severity will be moderate.
+      */
 
     lazy val serializerSeverity: Severity = serializer match {
       case None => Severity.MODERATE
@@ -149,10 +156,10 @@ object ConfigurationHeuristic {
     }
 
     /**
-     * The following logic computes severity based on shuffle service and dynamic allocation flags.
-     * If dynamic allocation is disabled, then the severity will be MODERATE if shuffle service is disabled or not specified.
-     * If dynamic allocation is enabled, then the severity will be SEVERE if shuffle service is disabled or not specified.
-     */
+      * The following logic computes severity based on shuffle service and dynamic allocation flags.
+      * If dynamic allocation is disabled, then the severity will be MODERATE if shuffle service is disabled or not specified.
+      * If dynamic allocation is enabled, then the severity will be SEVERE if shuffle service is disabled or not specified.
+      */
 
     lazy val isDynamicAllocationEnabled: Option[Boolean] = Some(getProperty(SPARK_DYNAMIC_ALLOCATION_ENABLED).exists(_.toBoolean == true))
     lazy val isShuffleServiceEnabled: Option[Boolean] = Some(getProperty(SPARK_SHUFFLE_SERVICE_ENABLED).exists(_.toBoolean == true))
@@ -169,4 +176,5 @@ object ConfigurationHeuristic {
 
     private def getProperty(key: String): Option[String] = appConfigurationProperties.get(key)
   }
+
 }
