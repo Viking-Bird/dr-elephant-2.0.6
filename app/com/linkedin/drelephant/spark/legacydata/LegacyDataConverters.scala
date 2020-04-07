@@ -173,6 +173,7 @@ object LegacyDataConverters {
         executorInfo.shuffleRead,
         executorInfo.shuffleWrite,
         executorInfo.maxMem,
+        executorInfo.totalGCTime,
         executorLogs = Map.empty
       )
     }

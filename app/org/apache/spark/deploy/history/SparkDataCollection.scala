@@ -188,6 +188,7 @@ class SparkDataCollection extends SparkApplicationData {
         info.inputBytes = executorsListener.executorToInputBytes.getOrElse(info.execId, 0L)
         info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
         info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
+        info.totalGCTime = executorsListener.executorToJvmGCTime.getOrElse(info.execId, 0L)
 
         _executorData.setExecutorInfo(info.execId, info)
       }
