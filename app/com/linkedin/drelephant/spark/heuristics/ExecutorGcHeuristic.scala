@@ -102,7 +102,7 @@ object ExecutorGcHeuristic {
       data.appConfigurationProperties
     var (jvmTime, executorRunTimeTotal) = getTimeValues(executorSummaries)
 
-    var ratio: Double = jvmTime.toDouble / executorRunTimeTotal.toDouble
+    var ratio: Double = if ((jvmTime.toDouble / executorRunTimeTotal.toDouble).isNaN) 0 else jvmTime.toDouble / executorRunTimeTotal.toDouble
 
     lazy val severityTimeA: Severity = executorGcHeuristic.gcSeverityAThresholds.severityOf(ratio)
     lazy val severityTimeD: Severity = executorGcHeuristic.gcSeverityDThresholds.severityOf(ratio)
