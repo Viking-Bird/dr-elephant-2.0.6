@@ -162,7 +162,7 @@ object LegacyDataConverters {
     def extractExecutorSummary(executorId: String): ExecutorSummaryImpl = {
       val executorInfo = executorData.getExecutorInfo(executorId)
 
-      logger.info(s"Spark ${legacyData.getAppId} execId: ${executorInfo.execId}, duration: ${executorInfo.duration}, totalGCTime: ${executorInfo.totalGCTime}")
+      logger.info(s"Spark Legacy Data ${legacyData.getAppId} execId: ${executorInfo.execId}, duration: ${executorInfo.duration}, totalGCTime: ${executorInfo.totalGCTime}")
 
       new ExecutorSummaryImpl(
         executorInfo.execId,

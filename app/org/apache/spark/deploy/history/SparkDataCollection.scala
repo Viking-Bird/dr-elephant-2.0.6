@@ -19,11 +19,11 @@ package org.apache.spark.deploy.history
 import java.io.InputStream
 import java.util.{Properties, ArrayList => JArrayList, HashSet => JHashSet, List => JList, Set => JSet}
 
-import scala.collection.mutable
 import com.linkedin.drelephant.analysis.ApplicationType
-import com.linkedin.drelephant.spark.legacydata._
 import com.linkedin.drelephant.spark.legacydata.SparkExecutorData.ExecutorInfo
 import com.linkedin.drelephant.spark.legacydata.SparkJobProgressData.JobInfo
+import com.linkedin.drelephant.spark.legacydata._
+import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.{ApplicationEventListener, ReplayListenerBus, StageInfo}
 import org.apache.spark.storage.{RDDInfo, StorageStatus, StorageStatusListener, StorageStatusTrackingListener}
@@ -32,6 +32,8 @@ import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
 import org.apache.spark.util.collection.OpenHashSet
+
+import scala.collection.mutable
 
 /**
  * This class wraps the logic of collecting the data in SparkEventListeners into the
@@ -43,6 +45,8 @@ import org.apache.spark.util.collection.OpenHashSet
  */
 class SparkDataCollection extends SparkApplicationData {
   import SparkDataCollection._
+
+  val logger: Logger = Logger.getLogger(classOf[SparkDataCollection])
 
   lazy val applicationEventListener = new ApplicationEventListener()
   lazy val jobProgressListener = new JobProgressListener(new SparkConf())
@@ -186,6 +190,8 @@ class SparkDataCollection extends SparkApplicationData {
         info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
         info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
         info.totalGCTime = executorsListener.executorToJvmGCTime.getOrElse(info.execId, 0L)
+
+        logger.info(s"Spark Data Collection ${getAppId} execId: ${info.execId}, duration: ${executorsListener.executorToDuration.getOrElse(info.execId, 0L)}, totalGCTime: ${executorsListener.executorToJvmGCTime.getOrElse(info.execId, 0L)}")
 
         _executorData.setExecutorInfo(info.execId, info)
       }
