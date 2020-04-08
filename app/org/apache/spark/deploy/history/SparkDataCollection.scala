@@ -158,42 +158,6 @@ class SparkDataCollection extends SparkApplicationData {
     _environmentData
   }
 
-  def getExecutorData1(): SparkExecutorData = {
-    if (_executorData == null) {
-      _executorData = new SparkExecutorData()
-
-      val  storageStatusList = executorsListener.activeStorageStatusList ++ executorsListener.deadStorageStatusList
-
-      for (statusId <- 0 until storageStatusList.size) {
-        val info = new ExecutorInfo()
-
-        val status = storageStatusList(statusId)
-
-        info.execId = status.blockManagerId.executorId
-        info.hostPort = status.blockManagerId.hostPort
-        info.rddBlocks = status.numBlocks
-
-        // Use a customized listener to fetch the peak memory used, the data contained in status are
-        // the current used memory that is not useful in offline settings.
-        info.memUsed = storageStatusTrackingListener.executorIdToMaxUsedMem.getOrElse(info.execId, 0L)
-        info.maxMem = status.maxMem
-        info.diskUsed = status.diskUsed
-        info.activeTasks = executorsListener.executorToTasksActive.getOrElse(info.execId, 0)
-        info.failedTasks = executorsListener.executorToTasksFailed.getOrElse(info.execId, 0)
-        info.completedTasks = executorsListener.executorToTasksComplete.getOrElse(info.execId, 0)
-        info.totalTasks = info.activeTasks + info.failedTasks + info.completedTasks
-        info.duration = executorsListener.executorToDuration.getOrElse(info.execId, 0L)
-        info.inputBytes = executorsListener.executorToInputBytes.getOrElse(info.execId, 0L)
-        info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
-        info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
-        info.totalGCTime = executorsListener.executorToJvmGCTime.getOrElse(info.execId, 0L)
-
-        _executorData.setExecutorInfo(info.execId, info)
-      }
-    }
-    _executorData
-  }
-
   override def getExecutorData(): SparkExecutorData = {
     if (_executorData == null) {
       _executorData = new SparkExecutorData()

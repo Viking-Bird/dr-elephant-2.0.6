@@ -18,12 +18,13 @@ package com.linkedin.drelephant.spark.legacydata
 
 import java.util.Date
 
-import scala.collection.JavaConverters
-import scala.util.Try
-
 import com.linkedin.drelephant.spark.fetchers.statusapiv1._
+import org.apache.log4j.Logger
 import org.apache.spark.JobExecutionStatus
 import org.apache.spark.status.api.v1.StageStatus
+
+import scala.collection.JavaConverters
+import scala.util.Try
 
 /**
   * Converters for legacy SparkApplicationData to current SparkApplicationData.
@@ -33,6 +34,8 @@ import org.apache.spark.status.api.v1.StageStatus
   */
 object LegacyDataConverters {
   import JavaConverters._
+
+  val logger = Logger.getLogger(LegacyDataConverters.getClass)
 
   def convert(legacyData: SparkApplicationData): com.linkedin.drelephant.spark.data.SparkApplicationData = {
     com.linkedin.drelephant.spark.data.SparkApplicationData(
@@ -158,6 +161,9 @@ object LegacyDataConverters {
 
     def extractExecutorSummary(executorId: String): ExecutorSummaryImpl = {
       val executorInfo = executorData.getExecutorInfo(executorId)
+
+      logger.info(s"Spark ${legacyData.getAppId} execId: ${executorInfo.execId}, duration: ${executorInfo.duration}, totalGCTime: ${executorInfo.totalGCTime}")
+
       new ExecutorSummaryImpl(
         executorInfo.execId,
         executorInfo.hostPort,
