@@ -56,8 +56,6 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
       new HeuristicResultDetails("Total Executor Runtime", evaluator.executorRunTimeTotal.toString)
     )
 
-    logger.info(s"Spark ${data.getAppId} jvmTime: ${evaluator.jvmTime}, executorRunTimeTotal: ${evaluator.executorRunTimeTotal}")
-
     //adding recommendations to the result, severityTimeA corresponds to the ascending severity calculation
     if (evaluator.severityTimeA.getValue > Severity.LOW.getValue) {
       resultDetails = resultDetails :+ new HeuristicResultDetails("Gc ratio high", "The job is spending too much time on GC. We recommend increasing the executor memory.")
@@ -79,8 +77,7 @@ class ExecutorGcHeuristic(private val heuristicConfigurationData: HeuristicConfi
 }
 
 object ExecutorGcHeuristic {
-  val SPARK_EXECUTOR_MEMORY = "spark.executor.memory"
-  val SPARK_EXECUTOR_CORES = "spark.executor.cores"
+  val logger: Logger = Logger.getLogger(classOf[ExecutorGcHeuristic])
 
   /** The ascending severity thresholds for the ratio of JVM GC Time and executor Run Time (checking whether ratio is above normal)
     * These thresholds are experimental and are likely to change */
@@ -120,6 +117,7 @@ object ExecutorGcHeuristic {
         jvmGcTimeTotal += executorSummary.totalGCTime
         executorRunTimeTotal += executorSummary.totalDuration
       })
+      logger.info(s"Spark ${data.getAppId} jvmTime: ${jvmGcTimeTotal}, executorRunTimeTotal: ${executorRunTimeTotal}")
       (jvmGcTimeTotal, executorRunTimeTotal)
     }
   }
