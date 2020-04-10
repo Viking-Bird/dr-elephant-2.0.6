@@ -23,7 +23,6 @@ import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.spark.legacydata.SparkExecutorData.ExecutorInfo
 import com.linkedin.drelephant.spark.legacydata.SparkJobProgressData.JobInfo
 import com.linkedin.drelephant.spark.legacydata._
-import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.scheduler.{ApplicationEventListener, ReplayListenerBus, StageInfo}
 import org.apache.spark.storage.{RDDInfo, StorageStatus, StorageStatusListener, StorageStatusTrackingListener}
@@ -32,6 +31,7 @@ import org.apache.spark.ui.exec.ExecutorsListener
 import org.apache.spark.ui.jobs.JobProgressListener
 import org.apache.spark.ui.storage.StorageListener
 import org.apache.spark.util.collection.OpenHashSet
+import org.json4s.DefaultFormats
 
 import scala.collection.mutable
 
@@ -45,8 +45,6 @@ import scala.collection.mutable
  */
 class SparkDataCollection extends SparkApplicationData {
   import SparkDataCollection._
-
-  val logger: Logger = Logger.getLogger(classOf[SparkDataCollection])
 
   lazy val applicationEventListener = new ApplicationEventListener()
   lazy val jobProgressListener = new JobProgressListener(new SparkConf())
@@ -78,6 +76,7 @@ class SparkDataCollection extends SparkApplicationData {
 
   override def isEmpty(): Boolean = !isThrottled() && getExecutorData().getExecutors.isEmpty()
 
+  // 获取任务共有数据
   override def getGeneralData(): SparkGeneralData = {
     if (_applicationData == null) {
       _applicationData = new SparkGeneralData()
@@ -106,15 +105,6 @@ class SparkDataCollection extends SparkApplicationData {
         }
         case None => {
           // do nothing
-        }
-      }
-
-      applicationEventListener.appAttemptId match {
-        case Some(s: String) => {
-          _applicationData.set_appAttemptId(s)
-        }
-        case None =>{
-
         }
       }
 
@@ -157,23 +147,27 @@ class SparkDataCollection extends SparkApplicationData {
     _applicationData
   }
 
+  // 获取任务运行环境数据
   override def getEnvironmentData(): SparkEnvironmentData = {
     if (_environmentData == null) {
       // Notice: we ignore jvmInformation and classpathEntries, because they are less likely to be used by any analyzer.
       _environmentData = new SparkEnvironmentData()
       environmentListener.systemProperties.foreach { case (name, value) =>
         _environmentData.addSystemProperty(name, value)
-                                                   }
+      }
       environmentListener.sparkProperties.foreach { case (name, value) =>
         _environmentData.addSparkProperty(name, value)
-                                                  }
+      }
     }
     _environmentData
   }
 
+  // 获取Executor数据
   override def getExecutorData(): SparkExecutorData = {
     if (_executorData == null) {
       _executorData = new SparkExecutorData()
+
+      println(executorsListener.activeStorageStatusList.size)
 
       for (statusId <- 0 until executorsListener.activeStorageStatusList.size) {
         val info = new ExecutorInfo()
@@ -199,8 +193,6 @@ class SparkDataCollection extends SparkApplicationData {
         info.shuffleRead = executorsListener.executorToShuffleRead.getOrElse(info.execId, 0L)
         info.shuffleWrite = executorsListener.executorToShuffleWrite.getOrElse(info.execId, 0L)
         info.totalGCTime = executorsListener.executorToJvmGCTime.getOrElse(info.execId, 0L)
-
-        logger.info(s"Spark Data Collection ${getAppId} execId: ${info.execId}, duration: ${executorsListener.executorToDuration.getOrElse(info.execId, 0L)}, totalGCTime: ${executorsListener.executorToJvmGCTime.getOrElse(info.execId, 0L)}")
 
         _executorData.setExecutorInfo(info.execId, info)
       }
@@ -230,7 +222,7 @@ class SparkDataCollection extends SparkApplicationData {
         jobInfo.startTime = data.submissionTime.getOrElse(0)
         jobInfo.endTime = data.completionTime.getOrElse(0)
 
-        data.stageIds.foreach{ case (id: Int) => jobInfo.addStageId(id)}
+        data.stageIds.foreach { case (id: Int) => jobInfo.addStageId(id) }
         addIntSetToJSet(data.completedStageIndices, jobInfo.completedStageIndices)
 
         _jobProgressData.addJobInfo(id, jobInfo)
@@ -238,37 +230,37 @@ class SparkDataCollection extends SparkApplicationData {
 
       // Add Stage Info
       jobProgressListener.stageIdToData.foreach { case (id, data) =>
-          val stageInfo = new SparkJobProgressData.StageInfo()
-          val sparkStageInfo = jobProgressListener.stageIdToInfo.get(id._1)
-          stageInfo.name = sparkStageInfo match {
-            case Some(info: StageInfo) => {
-              info.name
-            }
-            case None => {
-              ""
-            }
+        val stageInfo = new SparkJobProgressData.StageInfo()
+        val sparkStageInfo = jobProgressListener.stageIdToInfo.get(id._1)
+        stageInfo.name = sparkStageInfo match {
+          case Some(info: StageInfo) => {
+            info.name
           }
-          stageInfo.description = data.description.getOrElse("")
-          stageInfo.diskBytesSpilled = data.diskBytesSpilled
-          stageInfo.executorRunTime = data.executorRunTime
-          stageInfo.duration = sparkStageInfo match {
-            case Some(info: StageInfo) => {
-              val submissionTime = info.submissionTime.getOrElse(0L)
-              info.completionTime.getOrElse(submissionTime) - submissionTime
-            }
-            case _ => 0L
+          case None => {
+            ""
           }
-          stageInfo.inputBytes = data.inputBytes
-          stageInfo.memoryBytesSpilled = data.memoryBytesSpilled
-          stageInfo.numActiveTasks = data.numActiveTasks
-          stageInfo.numCompleteTasks = data.numCompleteTasks
-          stageInfo.numFailedTasks = data.numFailedTasks
-          stageInfo.outputBytes = data.outputBytes
-          stageInfo.shuffleReadBytes = data.shuffleReadTotalBytes
-          stageInfo.shuffleWriteBytes = data.shuffleWriteBytes
-          addIntSetToJSet(data.completedIndices, stageInfo.completedIndices)
+        }
+        stageInfo.description = data.description.getOrElse("")
+        stageInfo.diskBytesSpilled = data.diskBytesSpilled
+        stageInfo.executorRunTime = data.executorRunTime
+        stageInfo.duration = sparkStageInfo match {
+          case Some(info: StageInfo) => {
+            val submissionTime = info.submissionTime.getOrElse(0L)
+            info.completionTime.getOrElse(submissionTime) - submissionTime
+          }
+          case _ => 0L
+        }
+        stageInfo.inputBytes = data.inputBytes
+        stageInfo.memoryBytesSpilled = data.memoryBytesSpilled
+        stageInfo.numActiveTasks = data.numActiveTasks
+        stageInfo.numCompleteTasks = data.numCompleteTasks
+        stageInfo.numFailedTasks = data.numFailedTasks
+        stageInfo.outputBytes = data.outputBytes
+        stageInfo.shuffleReadBytes = data.shuffleReadTotalBytes
+        stageInfo.shuffleWriteBytes = data.shuffleWriteBytes
+        addIntSetToJSet(data.completedIndices, stageInfo.completedIndices)
 
-          _jobProgressData.addStageInfo(id._1, id._2, stageInfo)
+        _jobProgressData.addStageInfo(id._1, id._2, stageInfo)
       }
 
       // Add completed jobs
@@ -310,6 +302,7 @@ class SparkDataCollection extends SparkApplicationData {
     replayBus.addListener(executorsListener)
     replayBus.addListener(storageListener)
     replayBus.addListener(storageStatusTrackingListener)
+    implicit val formats = DefaultFormats
     replayBus.replay(in, sourceName, maybeTruncated = false)
   }
 }
@@ -319,13 +312,13 @@ object SparkDataCollection {
 
   def stringToSet(str: String): JSet[String] = {
     val set = new JHashSet[String]()
-    str.split(",").foreach { case t: String => set.add(t)}
+    str.split(",").foreach { case t: String => set.add(t) }
     set
   }
 
   def toJList[T](seq: Seq[T]): JList[T] = {
     val list = new JArrayList[T]()
-    seq.foreach { case (item: T) => list.add(item)}
+    seq.foreach { case (item: T) => list.add(item) }
     list
   }
 
