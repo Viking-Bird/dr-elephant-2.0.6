@@ -26,6 +26,7 @@ public class SparkGeneralData {
   private Set<String> _adminAcls;
   private Set<String> _viewAcls;
   private String _applicationId;
+  private String _appAttemptId;
   private String _applicationName;
   private String _sparkUser;
   private long _startTime;
@@ -85,5 +86,13 @@ public class SparkGeneralData {
 
   public void setEndTime(long endTime) {
     _endTime = endTime;
+  }
+
+  public String get_appAttemptId() {
+    return _appAttemptId;
+  }
+
+  public void set_appAttemptId(String _appAttemptId) {
+    this._appAttemptId = _appAttemptId;
   }
 }

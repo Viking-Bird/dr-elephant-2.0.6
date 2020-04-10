@@ -77,10 +77,10 @@
       <event_log_location_uri>webhdfs://localhost:50070/system/spark-history</event_log_location_uri>
     </params>
   -->
-  <fetcher>
-    <applicationtype>spark</applicationtype>
-    <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>
-  </fetcher>
+<!--  <fetcher>-->
+<!--    <applicationtype>spark</applicationtype>-->
+<!--    <classname>com.linkedin.drelephant.spark.fetchers.FSFetcher</classname>-->
+<!--  </fetcher>-->
 
   <!--
   This is an experimental fetcher for Spark applications which uses SHS REST API to get application metrics
@@ -106,4 +106,13 @@
     </params>
   </fetcher>
   -->
+
+  <fetcher>
+    <applicationtype>spark</applicationtype>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
+    <params>
+      <use_rest_for_eventlogs>true</use_rest_for_eventlogs>
+      <should_process_logs_locally>true</should_process_logs_locally>
+    </params>
+  </fetcher>
 </fetchers>

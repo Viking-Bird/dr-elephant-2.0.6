@@ -20,6 +20,7 @@ import com.linkedin.drelephant.analysis.{HadoopAggregatedData, HadoopApplication
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.math.Statistics
 import com.linkedin.drelephant.spark.data.SparkApplicationData
+import com.linkedin.drelephant.spark.heuristics.ExecutorGcHeuristic.logger
 import com.linkedin.drelephant.util.MemoryFormatUtils
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Logger
@@ -56,20 +57,23 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     if (applicationDurationMillis < 0) {
       logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
     } else {
+      // 获取所有Executor的执行时间
       val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
 
+      // 计算分配给任务的总资源，以MB/S表示
       val resourcesAllocatedForUse =
         aggregateresourcesAllocatedForUse(executorInstances, executorMemoryBytes, applicationDurationMillis)
+      // 计算任务实际使用的总资源
       val resourcesActuallyUsed = aggregateresourcesActuallyUsed(executorMemoryBytes, totalExecutorTaskTimeMillis)
-
+      // 计算任务实际使用和缓存的总资源
       val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
+      // 如果任务实际使用和缓存的总资源小于给任务分配的总资源的话（大于任务会被Kill掉），就用resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer计算任务浪费的资源
       val resourcesWastedMBSeconds = (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
         case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
         case false => 0.0
       }
       //allocated is the total used resource from the cluster.
       if (resourcesAllocatedForUse.isValidLong) {
-        logger.info("Spark " + data.getAppId() + s" ResourceUsed:$resourcesAllocatedForUse, executorInstances:$executorInstances, executorMemoryBytes:$executorMemoryBytes, applicationDurationMillis:$applicationDurationMillis")
         hadoopAggregatedData.setResourceUsed(resourcesAllocatedForUse.toLong)
       } else {
         logger.warn(s"resourcesAllocatedForUse/resourcesWasted exceeds Long.MaxValue")
@@ -117,6 +121,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
   private def applicationDurationMillisOf(data: SparkApplicationData): Long = {
     require(data.applicationInfo.attempts.nonEmpty)
     val lastApplicationAttemptInfo = data.applicationInfo.attempts.last
+    logger.info(s"Spark ${data.getAppId} attempts.size: ${data.applicationInfo.attempts.size}, last.attemptId: ${lastApplicationAttemptInfo.attemptId}, last.attempt.endTime: ${lastApplicationAttemptInfo.endTime.getTime}, last.attempt.startTime: ${lastApplicationAttemptInfo.startTime.getTime}")
     lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime
   }
 

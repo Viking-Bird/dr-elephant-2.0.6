@@ -33,6 +33,7 @@ import scala.util.Try
   * In practice, the Dr. Elephant Spark heuristics end up using a relatively small subset of the converted data.
   */
 object LegacyDataConverters {
+
   import JavaConverters._
 
   val logger = Logger.getLogger(LegacyDataConverters.getClass)
@@ -57,8 +58,16 @@ object LegacyDataConverters {
       generalData.getApplicationId,
       generalData.getApplicationName,
       Seq(
+        //        new ApplicationAttemptInfoImpl(
+        //          Some("1"),
+        //          new Date(generalData.getStartTime),
+        //          new Date(generalData.getEndTime),
+        //          generalData.getSparkUser,
+        //          completed = true
+        //        )
+
         new ApplicationAttemptInfoImpl(
-          Some("1"),
+          Some(generalData.get_appAttemptId()),
           new Date(generalData.getStartTime),
           new Date(generalData.getEndTime),
           generalData.getSparkUser,
@@ -79,7 +88,9 @@ object LegacyDataConverters {
         description = None,
         submissionTime = None,
         completionTime = None,
-        jobInfo.stageIds.asScala.map { _.toInt },
+        jobInfo.stageIds.asScala.map {
+          _.toInt
+        },
         Option(jobInfo.jobGroup),
         extractJobExecutionStatus(jobId),
         jobInfo.numTasks,
@@ -186,7 +197,9 @@ object LegacyDataConverters {
 
     val sortedExecutorIds = {
       val executorIds = executorData.getExecutors.asScala.toSeq
-      Try(executorIds.sortBy { _.toInt }).getOrElse(executorIds.sorted)
+      Try(executorIds.sortBy {
+        _.toInt
+      }).getOrElse(executorIds.sorted)
     }
     sortedExecutorIds.map { executorId => extractExecutorSummary(executorId) }
   }

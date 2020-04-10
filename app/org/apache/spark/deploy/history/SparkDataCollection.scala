@@ -109,6 +109,15 @@ class SparkDataCollection extends SparkApplicationData {
         }
       }
 
+      applicationEventListener.appAttemptId match {
+        case Some(s: String) => {
+          _applicationData.set_appAttemptId(s)
+        }
+        case None =>{
+
+        }
+      }
+
       applicationEventListener.appName match {
         case Some(s: String) => {
           _applicationData.setApplicationName(s)
