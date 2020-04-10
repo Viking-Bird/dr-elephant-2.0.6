@@ -20,7 +20,6 @@ import com.linkedin.drelephant.analysis.{HadoopAggregatedData, HadoopApplication
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.math.Statistics
 import com.linkedin.drelephant.spark.data.SparkApplicationData
-import com.linkedin.drelephant.spark.heuristics.ExecutorGcHeuristic.logger
 import com.linkedin.drelephant.util.MemoryFormatUtils
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Logger
@@ -55,7 +54,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
   } {
     val applicationDurationMillis = applicationDurationMillisOf(data)
     if (applicationDurationMillis < 0) {
-      logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
+      logger.warn(s"${data.getAppId()} applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
     } else {
       // 获取所有Executor的执行时间
       val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
